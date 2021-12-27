@@ -62,6 +62,7 @@ namespace ENBLightPatcher
             foreach (var lightGetter in state.LoadOrder.PriorityOrder.Light().WinningContextOverrides())
             {
                 if (lightGetter.ModKey == enbLightPluginNameWithExtension) continue;
+                if ( lightGetter.ModKey == skipmod ) continue;
                 var light = lightGetter.Record;
                 if (light.EditorID == null) continue;
                 if (lightNamesToAdjust.Any(light.EditorID.ContainsInsensitive))
