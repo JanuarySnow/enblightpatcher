@@ -53,9 +53,9 @@ namespace ENBLightPatcher
             }
 
             ModKey[] blacklisted_mods = new ModKey[text_count];
-            Console.WriteLine("*** DETECTED BLACKLIST ***");
             if (blacklist_found)
             {
+                Console.WriteLine("*** DETECTED BLACKLIST ***");
                 string[] lines = File.ReadAllLines(textFile);
                 var idx = 0;
                 foreach (string line in lines)
@@ -67,6 +67,9 @@ namespace ENBLightPatcher
                 }
                 Console.WriteLine("*************************");
 
+            } else
+            {
+                Console.WriteLine("*** NO BLACKLIST DETECTED ***");
             }
             // Part 1 - Patch every placed light in worldspaces/cells
             foreach (var placedObjectGetter in state.LoadOrder.PriorityOrder.PlacedObject().WinningContextOverrides(state.LinkCache))
