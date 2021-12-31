@@ -60,7 +60,7 @@ namespace ENBLightPatcher
                 var idx = 0;
                 foreach (string line in lines)
                 {
-                    Console.WriteLine("mod tomes allowed: text " + line);
+                    Console.WriteLine("mod blacklisted from patcher: " + line);
                     ModKey entry = ModKey.FromNameAndExtension(line);
                     blacklisted_mods[idx] = entry;
                     idx++;
