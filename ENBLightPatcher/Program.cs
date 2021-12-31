@@ -6,6 +6,7 @@ using Mutagen.Bethesda.Synthesis;
 using Mutagen.Bethesda.Skyrim;
 using Noggog;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace ENBLightPatcher
 {
@@ -26,8 +27,6 @@ namespace ENBLightPatcher
                 .SetTypicalOpen(GameRelease.SkyrimSE, "ENBLightPatcher.esp")
                 .Run(args);
         }
-        
-        public static readonly ModKey skipmod = ModKey.FromNameAndExtension("cceejsse002-tower.esl");
 
 
         private static readonly string enbLightPluginNameWithExtension = "ENB Light.esp";
@@ -36,13 +35,45 @@ namespace ENBLightPatcher
 
         private static readonly float fadeMultiplier = 0.5f;
 
+
+
         public static void RunPatch(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
+            string textFile = Path.Combine(state.ExtraSettingsDataPath, "blacklist.txt");
+            var text_count = 0;
+            var blacklist_found = false;
+            if (File.Exists(textFile))
+            {
+                blacklist_found = true;
+                string[] lines_there = File.ReadAllLines(textFile);
+                foreach (string line in lines_there)
+                {
+                    text_count++;
+                }
+            }
+
+            ModKey[] blacklisted_mods = new ModKey[text_count];
+            Console.WriteLine("*** DETECTED BLACKLIST ***");
+            if (blacklist_found)
+            {
+                string[] lines = File.ReadAllLines(textFile);
+                var idx = 0;
+                foreach (string line in lines)
+                {
+                    Console.WriteLine("mod tomes allowed: text " + line);
+                    ModKey entry = ModKey.FromNameAndExtension(line);
+                    blacklisted_mods[idx] = entry;
+                    idx++;
+                }
+                Console.WriteLine("*************************");
+
+            }
             // Part 1 - Patch every placed light in worldspaces/cells
             foreach (var placedObjectGetter in state.LoadOrder.PriorityOrder.PlacedObject().WinningContextOverrides(state.LinkCache))
             {
-                if (placedObjectGetter.ModKey == enbLightPluginNameWithExtension) continue;
-                if ( placedObjectGetter.ModKey == skipmod ) continue;
+                ModKey current_mod = placedObjectGetter.ModKey;
+                if (current_mod == enbLightPluginNameWithExtension) continue;
+                if (blacklisted_mods.Contains(current_mod)) continue;
                 var placedObject = placedObjectGetter.Record;
                 if (placedObject.LightData == null) continue;
                 placedObject.Base.TryResolve<ILightGetter>(state.LinkCache, out var placedObjectBase);
@@ -61,8 +92,9 @@ namespace ENBLightPatcher
             // Part 2 - Patch every LIGH record
             foreach (var lightGetter in state.LoadOrder.PriorityOrder.Light().WinningContextOverrides())
             {
-                if (lightGetter.ModKey == enbLightPluginNameWithExtension) continue;
-                if ( lightGetter.ModKey == skipmod ) continue;
+                ModKey current_mod = lightGetter.ModKey;
+                if (current_mod == enbLightPluginNameWithExtension) continue;
+                if (blacklisted_mods.Contains(current_mod)) continue;
                 var light = lightGetter.Record;
                 if (light.EditorID == null) continue;
                 if (lightNamesToAdjust.Any(light.EditorID.ContainsInsensitive))
